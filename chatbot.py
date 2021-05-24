@@ -52,8 +52,6 @@ class Chatbot:
 
         greeting_message = "Wonderful day, innit? How may I be of service?"
 
-        print(self.extract_titles('I thought 10 things i hate about you was great'))
-
         ########################################################################
         #                             END OF YOUR CODE                         #
         ########################################################################
@@ -364,6 +362,8 @@ class Chatbot:
         :returns: a numerical value for the sentiment of the text
         """
         negation_words = {'not', 'never', "doesn't", "isn't", "wasn't", "shouldn't", "wouldn't", "couldn't", "won't", "can't", "don't", "didn't"}
+        strong_words = {'loved', 'love', 'terrible', 'horrible', 'awful', 'amazing', 'wonderful', 'terrific', 'fantastic', 'adored', 'awesome', 'fascinating', 'incredible', 'marvelous', 'stunning'}
+        multiplier_words = {'really', 'reeally'}
         stemmer = PorterStemmer()
 
         first_quote = preprocessed_input.find('"')
@@ -371,40 +371,79 @@ class Chatbot:
         input_without_title = preprocessed_input[:first_quote] + preprocessed_input[second_quote+1:]
         input_without_title = input_without_title.lower()
 
+        multiplier = 1
         pos_count = 0
         neg_count = 0
         flipped_sentiment = False
+        prev_word = None
+        
         for word in input_without_title.split():
             if word in negation_words:
                 flipped_sentiment = True
 
             stemmed_word = stemmer.stem(word, 0, len(word) - 1)
-            candidates = [word, stemmed_word]
+            stripped_word = re.sub(r'[^A-Za-z0-9 ]+', '', word)
+            candidates = {word, stemmed_word, stripped_word}
+            
             # Check past tense edge case.
             if word[-2:] == "ed":
-                candidates.append(word[:-1])
-                candidates.append(word[:-2])
+                candidates.add(word[:-1])
+                candidates.add(word[:-2])
 
             for candidate in candidates:
-                if self.sentiment.get(candidate, '') == 'pos':
-                    if flipped_sentiment:
-                        neg_count += 1
-                    else:
-                        pos_count += 1
-                    break
-                if self.sentiment.get(candidate, '') == 'neg':
-                    if flipped_sentiment:
-                        pos_count += 1
-                    else:
-                        neg_count += 1
+                if self.creative and candidate in multiplier_words:
+                    if prev_word is None or prev_word not in negation_words:
+                        multiplier = 2
                     break
 
-        if pos_count > neg_count:
-            return 1
-        elif neg_count > pos_count:
-            return -1
+                if self.sentiment.get(candidate, '') == 'pos':
+                    if flipped_sentiment:
+                        if not self.creative:
+                            neg_count += 1
+                        else:
+                            neg_count += 2 * multiplier if candidate in strong_words else multiplier
+                    else:
+                        if not self.creative:
+                            pos_count += 1
+                        else:
+                            pos_count += 2 * multiplier if candidate in strong_words else multiplier
+                    multiplier = 1
+                    break
+
+                if self.sentiment.get(candidate, '') == 'neg':
+                    if flipped_sentiment:
+                        if not self.creative:
+                            pos_count += 1
+                        else:
+                            pos_count += 2 * multiplier if candidate in strong_words else multiplier
+                    else:
+                        if not self.creative:
+                            neg_count += 1
+                        else:
+                            neg_count += 2 * multiplier if candidate in strong_words else multiplier
+                    multiplier 
+                    break
+                    
+            prev_word = word
+
+        if not self.creative:
+            if pos_count > neg_count:
+                return 1
+            elif neg_count > pos_count:
+                return -1
+            else:
+                return 0
         else:
-            return 0
+            if pos_count >= neg_count + 2:
+                return 2
+            elif pos_count > neg_count:
+                return 1
+            elif neg_count >= pos_count + 2:
+                return -2
+            elif neg_count > pos_count:
+                return -1
+            else:
+                return 0
 
     def extract_sentiment_for_movies(self, preprocessed_input):
         """Creative Feature: Extracts the sentiments from a line of
