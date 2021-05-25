@@ -812,9 +812,9 @@ class Chatbot:
         
         nonzeros = []
         
-        for k in range(len(user_ratings)):
-            if user_ratings[k] != 0:
-                nonzeros.append(k)
+        for m in range(len(user_ratings)):
+            if user_ratings[m] != 0:
+                nonzeros.append(m)
         
         for i in range(len(user_ratings)):
             predicted_rating = 0
