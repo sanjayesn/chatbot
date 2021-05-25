@@ -29,7 +29,8 @@ Did not implement any of the above features: NO
 #########################################################################################
 # Team Contributions                                                                    #
 #########################################################################################
-We believe that we all contributed pretty equally to the code, as we were all working quite synchronously via Zoom to implement each starter and creative mode feature. 
+We believe that we all contributed pretty equally to the code, as we were all working quite synchronously 
+via Zoom to implement each starter and creative mode feature. 
 
 
 #########################################################################################
@@ -48,9 +49,19 @@ that they were written by a human.
 What are some possible ramifications of anthropomorphizing chatbot systems? Can you think of any ways that
 engineers could ensure that users can easily distinguish the chatbot responses from those of a human?
 
-Allowing chatbot systems to be anthropomorphized by the general public can prove to be quite dangerous. This is outlined very clearly in the lecture video regarding ELIZA, when Weizenbaum discovered that members of his staff were having quite private conversations with ELIZA. Clearly there is the matter of data privacy - if chatbots are perceived as “human”, then people might be willing to share more sensitive and vulnerable information about themselves. More importantly, however, I think that the anthropomorphization of chatbot systems can negatively impact one’s mental health. “Understanding” a chatbot system to be “human” is actually a huge deal - your brain believes that a piece of software is “human” enough for your conversational needs. But there will inevitably come a time when the chatbot crashes, loops through the same text repetitively, or does something else that is very non-human. To someone who has anthropomorphized the chatbot, this could have a wide array of consequences (ranging from dissatisfaction or anger to low self-esteem or even heightened anxiety).
+Allowing chatbot systems to be anthropomorphized by the general public can prove to be quite dangerous. This is outlined very clearly 
+in the lecture video regarding ELIZA, when Weizenbaum discovered that members of his staff were having quite private conversations with ELIZA. 
+Clearly there is the matter of data privacy - if chatbots are perceived as “human”, then people might be willing to share more sensitive and 
+vulnerable information about themselves. More importantly, however, I think that the anthropomorphization of chatbot systems can negatively 
+impact one’s mental health. “Understanding” a chatbot system to be “human” is actually a huge deal - your brain believes that a piece of software 
+is “human” enough for your conversational needs. But there will inevitably come a time when the chatbot crashes, loops through the same text 
+repetitively, or does something else that is very non-human. To someone who has anthropomorphized the chatbot, this could have a wide array of 
+consequences (ranging from dissatisfaction or anger to low self-esteem or even heightened anxiety).
 
-To ensure that users can easily distinguish chatbot responses from those of a human, engineers should just be as explicit as possible when releasing chatbots to the general public. A quick addendum to the greeting message simply stating that the software is a chatbot would suffice. And perhaps if the user is starting to give more sensitive information than needed to the chatbot, it could give the user a quick message explicitly reminding the user that they are talking to a chatbot, not a human. Anything produced by a chatbot should be easily identifiable to the chatbot itself.
+To ensure that users can easily distinguish chatbot responses from those of a human, engineers should just be as explicit as possible when releasing 
+chatbots to the general public. A quick addendum to the greeting message simply stating that the software is a chatbot would suffice. And perhaps 
+if the user is starting to give more sensitive information than needed to the chatbot, it could give the user a quick message explicitly reminding 
+the user that they are talking to a chatbot, not a human. Anything produced by a chatbot should be easily identifiable to the chatbot itself.
 
 
 #########################################################################################
