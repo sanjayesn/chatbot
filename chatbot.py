@@ -151,6 +151,8 @@ class Chatbot:
                 response = random.choice(positive_bank) + self.titles[correct_movie_id][0] + random.choice(addendum_bank)
             
             self.spell_correcting = False
+            self.user_counter += 1
+
             return response
                 
                 
@@ -379,51 +381,51 @@ class Chatbot:
         :returns: list of movie titles that are potentially in the text
         """
         movie_list = re.findall(r'\"(.+?)\"', preprocessed_input)
-        if not self.creative:
-            return movie_list
+#         if not self.creative:
+#             return movie_list
 
-        else:
-            preprocessed_input = re.sub(r'[^A-Za-z0-9\. ]+', '', preprocessed_input).lower()
+#         else:
+        preprocessed_input = re.sub(r'[^A-Za-z0-9\. ]+', '', preprocessed_input).lower()
 
-            for movie_data in self.titles:
-                title_end_index = movie_data[0].find(' (')
-                main_title = movie_data[0][:title_end_index].lower()
+        for movie_data in self.titles:
+            title_end_index = movie_data[0].find(' (')
+            main_title = movie_data[0][:title_end_index].lower()
 
-                this_movie_titles = [main_title]
+            this_movie_titles = [main_title]
 
-                alts = re.findall("\((.+?)\)", movie_data[0])
-                if alts:
-                    alts.pop()
-                for i in range(len(alts)):
-                    if "a.k.a. " in alts[i]:
-                        alts[i] = alts[i][7:]
-                this_movie_titles += alts
+            alts = re.findall("\((.+?)\)", movie_data[0])
+            if alts:
+                alts.pop()
+            for i in range(len(alts)):
+                if "a.k.a. " in alts[i]:
+                    alts[i] = alts[i][7:]
+            this_movie_titles += alts
 
-                for title in this_movie_titles:
-                    title = title.lower()
-                    title_words = title.split()
-                    new_title = ''
-                    comma_flag = False
-                    for i in range(len(title_words)):
-                        if "," in title_words[i]:
-                            new_title = ' '.join(title_words[i+1:])
-                            new_title += ' ' + ' '.join(title_words[0: i+1])
-                            comma_flag = True
-                            break
+            for title in this_movie_titles:
+                title = title.lower()
+                title_words = title.split()
+                new_title = ''
+                comma_flag = False
+                for i in range(len(title_words)):
+                    if "," in title_words[i]:
+                        new_title = ' '.join(title_words[i+1:])
+                        new_title += ' ' + ' '.join(title_words[0: i+1])
+                        comma_flag = True
+                        break
 
-                    if not comma_flag:
-                        new_title = title
-                    new_title = re.sub(r'[^A-Za-z0-9\. ]+', '', new_title)
+                if not comma_flag:
+                    new_title = title
+                new_title = re.sub(r'[^A-Za-z0-9\. ]+', '', new_title)
 
-                    if new_title in preprocessed_input:
-                        flag = True
-                        find_index = preprocessed_input.find(new_title)
-                        if find_index != 0 and preprocessed_input[find_index - 1] != ' ':
-                            flag = False
-                        if find_index + len(new_title) < len(preprocessed_input) and preprocessed_input[find_index + len(new_title)] != ' ':
-                            flag = False
-                        if flag:
-                            movie_list.append(title)
+                if new_title in preprocessed_input:
+                    flag = True
+                    find_index = preprocessed_input.find(new_title)
+                    if find_index != 0 and preprocessed_input[find_index - 1] != ' ':
+                        flag = False
+                    if find_index + len(new_title) < len(preprocessed_input) and preprocessed_input[find_index + len(new_title)] != ' ':
+                        flag = False
+                    if flag:
+                        movie_list.append(title)
 
             return movie_list
 
