@@ -33,6 +33,9 @@ class Chatbot:
         self.recommend_or_not = False
         self.asking_more_recs = False
         self.recommend_i = 0
+        self.spell_correcting = False
+        self.closest_movie_ids = []
+        self.correction_sentiment_val = 0
 
         ########################################################################
         # Binarize the movie ratings matrix.                             #
@@ -106,14 +109,56 @@ class Chatbot:
         # code in a modular fashion to make it easier to improve and debug.    #
         ########################################################################
         
+        nothing_bank = ["You didn't even mention a movie to me, you plebian.", "Didn't understand a word of what you said."   ]
+        negative_bank = [ "Seems to me you hate ", "I see you're not a huge fan of ", "Yeah, totally disappointed by ",  "you certainly don't like " ]
+        neutral_bank = [ "You're pretty in the middle about ", "Seems you're pretty neutral about ", "No real opinions about "]
+        positive_bank = ["You just adore ", "I see that you're a huge fan of ", "Nice! Awesome that you like ", "Groovy, you like " ]
+        addendum_bank = [", huh?", ", don't you?", ".", "!", "..." ]
+        
+        
+        if self.spell_correcting == True:
+            
+            length = len(self.closest_movie_ids)
+            
+            response = "Great, you liked "
+            correct_movie_id = 0
+            
+            try: 
+                movie_int = int(line)
+            except:
+                response = "You didn't put in a valid integer. Sorry! Let's move on."
+                self.spell_correcting = False
+                return response
+            
+            if movie_int <= len(self.closest_movie_ids):
+                correct_movie_id = self.closest_movie_ids[movie_int-1]
+            else:
+                response = "Too large of an integer, sorry. Let's move on!"
+                self.spell_correcting = False
+                return response
+                
+ 
+                
+            self.user_ratings[correct_movie_id] = self.correction_sentiment_val
+
+
+            if self.correction_sentiment_val == -1:
+                response = random.choice(negative_bank) + self.titles[correct_movie_id][0] + random.choice(addendum_bank)
+
+            elif self.correction_sentiment_val == 0:
+                response = random.choice(neutral_bank) + self.titles[correct_movie_id][0] + random.choice(addendum_bank)
+            else:
+                response = random.choice(positive_bank) + self.titles[correct_movie_id][0] + random.choice(addendum_bank)
+            
+            self.spell_correcting = False
+            return response
+                
+                
+        
 
         if not (((self.user_counter) %5 == 0 and self.user_counter != 0 ) or self.recommend_or_not == True):
             
-            nothing_bank = ["You didn't even mention a movie to me, you plebian.", "Didn't understand a word of what you said."   ]
-            negative_bank = [ "Seems to me you hate ", "I see you're not a huge fan of ", "Yeah, totally disappointed by ",  "you certainly don't like " ]
-            neutral_bank = [ "You're pretty in the middle about ", "Seems you're pretty neutral about ", "No real opinions about "]
-            positive_bank = ["You just adore ", "I see that you're a huge fan of ", "Nice! Awesome that you like ", "Groovy, you like " ]
-            addendum_bank = [", huh?", ", don't you?", ".", "!", "..." ]
+
 
 
 
@@ -123,6 +168,7 @@ class Chatbot:
 
 
             if len(title_list) == 0:
+                
                 response = random.choice(nothing_bank)
                 return response
 
@@ -131,11 +177,43 @@ class Chatbot:
                 title = title_list[0]
 
                 title_movies = self.find_movies_by_title(title)
-    #                 print("same titled movies in database: ", title_movies)
 
                 if len(title_movies) == 0:
-                    response = "Haven't even heard of what you mentioned in our database. You must be pretty cool to know about it, huh?"
-                    return response
+            
+                    # couldn't find it, let's check for something:
+                
+#                     print("title: ", title)
+                
+                    movie_ids_closest = self.find_movies_closest_to_title(title, max_distance=3)
+                    
+                    self.closest_movie_ids = movie_ids_closest
+                    
+                    self.correction_sentiment_val = self.extract_sentiment(line)
+                    
+                    if len(movie_ids_closest) == 0:
+                        response = "Haven't even heard of what you mentioned in our database. You must be pretty cool to know about it, huh?"
+                        return response
+                    
+                    movie_options_str = "Didn't catch that. Did you mean "
+                    
+                    for i, movie_id in enumerate(movie_ids_closest):
+                        
+                        if len(movie_ids_closest) == 1:
+                            movie_options_str += "(" + str(i+1) + "): " + self.titles[movie_id][0]
+                        elif i == len(movie_ids_closest)-1 and len(movie_ids_closest) > 1:
+                            movie_options_str += "or (" + str(i+1) + "): "
+                            movie_options_str += self.titles[movie_id][0]
+
+                        else:
+                            movie_options_str += "(" + str(i+1) + "): " + self.titles[movie_id][0]
+                            movie_options_str += ", "
+                    
+                    movie_options_str += "? Please type in the number associated."
+                    self.spell_correcting = True
+                        
+                    
+            
+                    return movie_options_str
 
                 if len(title_movies) == 1:
 
@@ -190,10 +268,13 @@ class Chatbot:
                     if i == len(tuples)-1:
                         # remove the last space and comma.
                         mult_response = mult_response[:len(mult_response)-2]
+                        
+                    self.user_counter += 1
+
 
                     # if at some point we get past 5 data points, make sure we recommend after this.
-                    if (self.user_counter + i) %5 == 0:
-                        self.recommend_or_not == True
+                    if self.user_counter %5 == 0:
+                        self.recommend_or_not = True
 
 
                 response = "It seems to me that " + mult_response + ". What a mouthful."
