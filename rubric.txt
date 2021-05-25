@@ -10,7 +10,7 @@
 
 FEATURE - Identifying movies without quotation marks and correct capitalization (part 1): YES
 FEATURE - Identifying movies without quotation marks and correct capitalization (part 2): YES
-FEATURE - Alternate/foreign titles: NO
+FEATURE - Alternate/foreign titles: YES
 FEATURE - Disambiguation (part 1): NO
 FEATURE - Fine-grained sentiment extraction: NO
 FEATURE - Spell-correcting fallback for find_movies_by_title: NO
@@ -37,15 +37,15 @@ TODO: Please write a short description of what each team member contributed!
 #########################################################################################
 TODO: Please answer the following question:
 
-Humans are quick to anthropomorphize chatbots, like ELIZA. 
-In the 1960’s, users’ trust in ELIZA raised numerous concerns that humans would believe the system’s advice, 
-even if ELIZA did not actually know what it was talking about. Newer chatbots are built using neural networks, 
-like those you implemented in PA5. These neural networks are trained on enormous sets of data, from online 
-sources like Reddit and Twitter. These sources are interlaced with offensive text that are often reproduced 
-in chatbot responses. Furthermore, the newest advanced models, like GPT-3, have produced responses that appear 
+Humans are quick to anthropomorphize chatbots, like ELIZA.
+In the 1960’s, users’ trust in ELIZA raised numerous concerns that humans would believe the system’s advice,
+even if ELIZA did not actually know what it was talking about. Newer chatbots are built using neural networks,
+like those you implemented in PA5. These neural networks are trained on enormous sets of data, from online
+sources like Reddit and Twitter. These sources are interlaced with offensive text that are often reproduced
+in chatbot responses. Furthermore, the newest advanced models, like GPT-3, have produced responses that appear
 that they were written by a human.
 
-What are some possible ramifications of anthropomorphizing chatbot systems? Can you think of any ways that 
+What are some possible ramifications of anthropomorphizing chatbot systems? Can you think of any ways that
 engineers could ensure that users can easily distinguish the chatbot responses from those of a human?
 
 

@@ -24,8 +24,8 @@ class Chatbot:
         # movie i by user j
         self.titles, ratings = util.load_ratings('data/ratings.txt')
         self.sentiment = util.load_sentiment_dictionary('data/sentiment.txt')
-        
-        
+
+
         # user information
         self.user_counter = 0
         self.user_ratings = np.zeros(( ratings.shape[0],1))
@@ -102,96 +102,96 @@ class Chatbot:
         # code in a modular fashion to make it easier to improve and debug.    #
         ########################################################################
         if (self.user_counter) %5 == 0 and self.user_counter != 0:
-            
-            
-            
+
+
+
             ##################### PLUG IN RECOMMENDATION STUFF HERE
-            
+
             recommendation = "some shitty recommendation"
-            
+
             response = "Given what you told me, I think you would like " + recommendation + ". Would you like more recommendations?"
             return response
             # make a recommendation.
-        
+
         if self.creative:
             response = "I processed {} in creative mode!!".format(line)
         else:
 
             title_list = self.extract_titles(line)
-            
-            
-#             print("detected movie titles: ",title_list) 
-            
+
+
+#             print("detected movie titles: ",title_list)
+
             if len(title_list) == 0:
                 response = "You didn't even mention a movie to me, you plebian."
                 return response
-            
+
             elif len(title_list) == 1:
-                
+
                 title = title_list[0]
-                
+
                 title_movies = self.find_movies_by_title(title)
                 print("same titled movies in database: ", title_movies)
-                
+
                 if len(title_movies) == 0:
                     response = "Haven't even heard of what you mentioned in our database. You must be pretty cool to know about it, huh?"
                     return response
-                
+
                 if len(title_movies) == 1:
-                    
+
                     movie_id = title_movies[0]
-                
+
                     sentiment_val = self.extract_sentiment(line)
                     self.user_ratings[movie_id] = sentiment_val
 
 
                     if sentiment_val == -1:
                         response = "You hate " + title + ", huh?"
-                        
+
                     elif sentiment_val == 0:
                         response = "You're pretty in the middle about " + title + ", aren't you?"
                     else:
                         response = "You just adore " + title + ", don't you?"
-                        
-                        
+
+
                     self.user_counter += 1
-                    
+
                 else:
                     response = "I found more than one movie called " + title + ". Can you clarify?"
                     return response
-                        
-                   
-                
+
+
+
             else:
                 # more than one movie
                 tuples = self.extract_sentiment_for_movies( line )
-                                
+
                 mult_response = ""
-                
+
                 for i, tup in enumerate(tuples):
                     # first title, then movie_id, then sentiment
                     title, sentiment_val = tup
                     movie_id = self.find_movies_by_title(title)[0]
-                    
+
                     self.user_ratings[movie_id] = sentiment_val
-                    
+
                     if i == len(tuples)-1:
                         # make sure the and is on the last term.
                         mult_response += "and "
-                    
+
                     if sentiment_val == -1:
                         mult_response += "you certainly don't like " + title + ", "
-                        
+
                     elif sentiment_val == 0:
                         mult_response += "you're pretty in the middle about " + title + ", "
                     else:
                         mult_response += "you just looove " + title + ", "
-                    
+
                     if i == len(tuples)-1:
                         # remove the last space and comma.
                         mult_response = mult_response[:len(mult_response)-2]
-                    
-                
+
+
                 response = "It seems to me that " + mult_response + ". What a mouthful."
 
         ########################################################################
@@ -260,31 +260,44 @@ class Chatbot:
 
             for movie_data in self.titles:
                 title_end_index = movie_data[0].find(' (')
-                title = movie_data[0][:title_end_index].lower()
-                title_words = title.split()
-                new_title = ''
-                comma_flag = False
-                for i in range(len(title_words)):
-                    if "," in title_words[i]:
-                        new_title = ' '.join(title_words[i+1:])
-                        new_title += ' ' + ' '.join(title_words[0: i+1])
-                        comma_flag = True
-                        break
+                main_title = movie_data[0][:title_end_index].lower()
 
-                if not comma_flag:
-                    new_title = title
-                new_title = re.sub(r'[^A-Za-z0-9\. ]+', '', new_title)
-                
-                if new_title in preprocessed_input:
-                    flag = True
-                    find_index = preprocessed_input.find(new_title)
-                    if find_index != 0 and preprocessed_input[find_index - 1] != ' ':
-                        flag = False
-                    if find_index + len(new_title) < len(preprocessed_input) and preprocessed_input[find_index + len(new_title)] != ' ':
-                        flag = False
-                    if flag:
-                        movie_list.append(new_title)
-                
+                this_movie_titles = [main_title]
+
+                alts = re.findall("\((.+?)\)", movie_data[0])
+                if alts:
+                    alts.pop()
+                for i in range(len(alts)):
+                    if "a.k.a. " in alts[i]:
+                        alts[i] = alts[i][7:]
+                this_movie_titles += alts
+
+                for title in this_movie_titles:
+                    title = title.lower()
+                    title_words = title.split()
+                    new_title = ''
+                    comma_flag = False
+                    for i in range(len(title_words)):
+                        if "," in title_words[i]:
+                            new_title = ' '.join(title_words[i+1:])
+                            new_title += ' ' + ' '.join(title_words[0: i+1])
+                            comma_flag = True
+                            break
+
+                    if not comma_flag:
+                        new_title = title
+                    new_title = re.sub(r'[^A-Za-z0-9\. ]+', '', new_title)
+
+                    if new_title in preprocessed_input:
+                        flag = True
+                        find_index = preprocessed_input.find(new_title)
+                        if find_index != 0 and preprocessed_input[find_index - 1] != ' ':
+                            flag = False
+                        if find_index + len(new_title) < len(preprocessed_input) and preprocessed_input[find_index + len(new_title)] != ' ':
+                            flag = False
+                        if flag:
+                            movie_list.append(title)
+
             return movie_list
 
     def find_movies_by_title(self, title):
@@ -313,32 +326,46 @@ class Chatbot:
             year = year[0]
 
         title = title.lower()
-        articles = {"the", "an", "a"}
+        #articles = {"the", "an", "a"}
         title_words = title.split()
 
         if year is not None:
             title = ' '.join(title_words[:-1])
 
-        if title_words[0] in articles:
+        try:
             if year is None:
-                title = ' '.join(title_words[1:]) + ', ' + title_words[0]
+                alt_title = ' '.join(title_words[1:]) + ', ' + title_words[0]
             else:
-                title = ' '.join(title_words[1:-1]) + ', ' + title_words[0]
+                alt_title = ' '.join(title_words[1:-1]) + ', ' + title_words[0]
+        except IndexError:
+            # Not enough words in the title
+            alt_title = title
 
         ids = []
         for i in range(len(self.titles)):
             movie_data = self.titles[i]
             title_end_index = movie_data[0].find(' (')
-            movie_title = movie_data[0][:title_end_index]
-            if title == movie_title.lower():
-                if year is not None:
-                    movie_year = re.findall(r'\((\d{4})\)', movie_data[0])
-                    if year == movie_year[0]:
+            main_title = movie_data[0][:title_end_index].lower()
+
+            this_movie_titles = [main_title]
+
+            alts = re.findall("\((.+?)\)", movie_data[0])
+            if alts:
+                alts.pop()
+            for j in range(len(alts)):
+                if "a.k.a. " in alts[j]:
+                    alts[j] = alts[j][7:]
+            this_movie_titles += alts
+            for movie_title in this_movie_titles:
+                if title == movie_title.lower() or alt_title == movie_title.lower():
+                    if year is not None:
+                        movie_year = re.findall(r'\((\d{4})\)', movie_data[0])
+                        if year == movie_year[0]:
+                            ids.append(i)
+                    else:
                         ids.append(i)
-                else:
-                    ids.append(i)
-        
-        return ids
+
+        return list(set(ids)) #removes duplicates
 
 
     def extract_sentiment(self, preprocessed_input):
@@ -376,7 +403,7 @@ class Chatbot:
         neg_count = 0
         flipped_sentiment = False
         prev_word = None
-        
+
         for word in input_without_title.split():
             if word in negation_words:
                 flipped_sentiment = True
@@ -384,7 +411,7 @@ class Chatbot:
             stemmed_word = stemmer.stem(word, 0, len(word) - 1)
             stripped_word = re.sub(r'[^A-Za-z0-9 ]+', '', word)
             candidates = {word, stemmed_word, stripped_word}
-            
+
             # Check past tense edge case.
             if word[-2:] == "ed":
                 candidates.add(word[:-1])
@@ -421,9 +448,9 @@ class Chatbot:
                             neg_count += 1
                         else:
                             neg_count += 2 * multiplier if candidate in strong_words else multiplier
-                    multiplier 
+                    multiplier
                     break
-                    
+
             prev_word = word
 
         if not self.creative:
@@ -467,49 +494,49 @@ class Chatbot:
         title, and the second is the sentiment in the text toward that movie
         """
         # idea is sentiment umbrellas
-        # until a word like "but, except, however" and other stoppers like that apply, everything up to that is under one umbrella. 
+        # until a word like "but, except, however" and other stoppers like that apply, everything up to that is under one umbrella.
         # we then just divide the string using those umbrellas, where multiple movies can be under one umbrella
-        
-        
+
+
         # one of the cases where this fucks up is where someone doesn't use grammatically correct stoppers
         # such as, "I hate "superman" and I hate "Ex Machina" and I love "I, Robot".
         # I want to put "and" into the transition phrases, but that fucks up usual things i.e. the first part of that example
         # but it seemed that most of their examples use some of these transition phrases.
-        
+
         flipping_transition_phrases = {'but', 'although', "in contrast", "instead", "whereas", "despite", "otherwise", "however", "regardless", "while", "yet", "on the other hand", "except", "nevertheless", "in contrast"}
-        
-        neg_transition_inds = [0]            
+
+        neg_transition_inds = [0]
 
         for phrase in flipping_transition_phrases:
             if phrase in preprocessed_input:
                 neg_transition_inds.append(preprocessed_input.find(phrase))
-                
+
         neg_transition_inds.sort()
         # gonna want ascending indices of negative transitions.
-        
-        
-        
+
+
+
         # now to split up the string
         substrs = []
-        
+
         for i, trans_ind in enumerate(neg_transition_inds):
-            
+
             if i < len(neg_transition_inds)-1:
                 substr = preprocessed_input[trans_ind:neg_transition_inds[i+1]]
             else:
                 substr = preprocessed_input[trans_ind:]
-                
+
             substrs.append(substr)
-                                                                            
-        
-        
+
+
+
         # our return
         tuples = []
-        
-        
+
+
         for substr in substrs:
-            
- 
+
+
             title_list = self.extract_titles(substr)
             if len(title_list) == 0:
                 # no movies mentioned in this substr.
@@ -527,10 +554,10 @@ class Chatbot:
 
 #                 tuples.append( (title, movie_id, sentiment_val) )
                 tuples.append( (title, sentiment_val) )
-    
-                
 
-        
+
+
+
         return tuples
 
     def find_movies_closest_to_title(self, title, max_distance=3):
@@ -625,7 +652,7 @@ class Chatbot:
                     binarized_ratings[i][j] = 1
                 elif vec[j] <= threshold:
                     binarized_ratings[i][j] = -1
-        
+
         return binarized_ratings
 
         ########################################################################
@@ -692,19 +719,19 @@ class Chatbot:
         # Populate this list with k movie indices to recommend to the user.
         recommendations = []
         ratings_predictions = {}
-        
+
         # Find a movie the user has not rated yet.
         for i in range(len(user_ratings)):
             predicted_rating = 0
             rating = user_ratings[i]
             if rating == 0:
-                # Compare movie i to each movie the user has already rated. 
+                # Compare movie i to each movie the user has already rated.
                 for j in range(len(user_ratings)):
                     if user_ratings[j] != 0 and i != j:
                         predicted_rating += self.similarity(ratings_matrix[i], ratings_matrix[j]) * user_ratings[j]
 
                 ratings_predictions[i] = predicted_rating
-        
+
         for key in sorted(ratings_predictions, key=ratings_predictions.get, reverse=True)[:k]:
             recommendations.append(key)
 
