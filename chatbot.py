@@ -560,6 +560,25 @@ class Chatbot:
 
         return tuples
 
+    # Helper function
+    def edit_distance(self, s1, s2):
+        D = np.zeros((len(s1)+1, len(s2)+1))
+        # initialization
+        for i in range(len(s1)+1):
+            D[i,0] = i
+        for j in range(len(s2)+1):
+            D[0,j] = j
+        # constructing the matrix
+        for i in range(1,len(s1)+1):
+            for j in range(1,len(s2)+1):
+                add1 = D[i-1,j]+1
+                add2 = D[i,j-1]+1
+                subst = D[i-1,j-1]
+                if s1[i-1] != s2[j-1]:
+                    subst += 2
+                D[i,j] = min(add1, add2, subst)
+        return D[-1,-1]
+
     def find_movies_closest_to_title(self, title, max_distance=3):
         """Creative Feature: Given a potentially misspelled movie title,
         return a list of the movies in the dataset whose titles have the least
@@ -583,8 +602,31 @@ class Chatbot:
         :returns: a list of movie indices with titles closest to the given title
         and within edit distance max_distance
         """
+        curr_closest_dist = max_distance + 1
+        ids = []
+        closest_titles = []
+        title = title.lower()
+        for i in range(len(self.titles)):
+            movie_data = self.titles[i]
+            title_end_index = movie_data[0].find(' (')
+            movie_title = movie_data[0][:title_end_index].lower()
 
-        pass
+            dist = self.edit_distance(title, movie_title)
+
+            if dist > max_distance:
+                continue
+
+            if dist < curr_closest_dist:
+                ids = [i]
+                closest_titles = [movie_title]
+                curr_closest_dist = dist
+            elif dist == curr_closest_dist:
+                # Tie for closest
+                ids.append(i)
+                closest_titles.append(movie_title)
+        return ids
+
+
 
     def disambiguate(self, clarification, candidates):
         """Creative Feature: Given a list of movies that the user could be
