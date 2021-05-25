@@ -7,6 +7,7 @@ import util
 from porter_stemmer import PorterStemmer
 import numpy as np
 import re
+import random
 
 
 # noinspection PyMethodMayBeStatic
@@ -29,6 +30,9 @@ class Chatbot:
         # user information
         self.user_counter = 0
         self.user_ratings = np.zeros(( ratings.shape[0],1))
+        self.recommend_or_not = False
+        self.asking_more_recs = False
+        self.recommend_i = 0
 
         ########################################################################
         # Binarize the movie ratings matrix.                             #
@@ -50,7 +54,7 @@ class Chatbot:
         ########################################################################
         ########################################################################
 
-        greeting_message = "Wonderful day, innit? How may I be of service?"
+        greeting_message = "Wonderful day, innit? How may I be of service? Tell me about a few movies, and I'll give you a recommendation!"
 
         ########################################################################
         #                             END OF YOUR CODE                         #
@@ -101,29 +105,25 @@ class Chatbot:
         # directly based on how modular it is, we highly recommended writing   #
         # code in a modular fashion to make it easier to improve and debug.    #
         ########################################################################
-        if (self.user_counter) %5 == 0 and self.user_counter != 0:
+        
+
+        if not (((self.user_counter) %5 == 0 and self.user_counter != 0 ) or self.recommend_or_not == True):
+            
+            nothing_bank = ["You didn't even mention a movie to me, you plebian.", "Didn't understand a word of what you said."   ]
+            negative_bank = [ "Seems to me you hate ", "I see you're not a huge fan of ", "Yeah, totally disappointed by ",  "you certainly don't like " ]
+            neutral_bank = [ "You're pretty in the middle about ", "Seems you're pretty neutral about ", "No real opinions about "]
+            positive_bank = ["You just adore ", "I see that you're a huge fan of ", "Nice! Awesome that you like ", "Groovy, you like " ]
+            addendum_bank = [", huh?", ", don't you?", ".", "!", "..." ]
 
 
 
-            ##################### PLUG IN RECOMMENDATION STUFF HERE
-
-            recommendation = "some shitty recommendation"
-
-            response = "Given what you told me, I think you would like " + recommendation + ". Would you like more recommendations?"
-            return response
-            # make a recommendation.
-
-        if self.creative:
-            response = "I processed {} in creative mode!!".format(line)
-        else:
 
             title_list = self.extract_titles(line)
 
 
-#             print("detected movie titles: ",title_list)
 
             if len(title_list) == 0:
-                response = "You didn't even mention a movie to me, you plebian."
+                response = random.choice(nothing_bank)
                 return response
 
             elif len(title_list) == 1:
@@ -131,7 +131,7 @@ class Chatbot:
                 title = title_list[0]
 
                 title_movies = self.find_movies_by_title(title)
-                print("same titled movies in database: ", title_movies)
+    #                 print("same titled movies in database: ", title_movies)
 
                 if len(title_movies) == 0:
                     response = "Haven't even heard of what you mentioned in our database. You must be pretty cool to know about it, huh?"
@@ -146,12 +146,12 @@ class Chatbot:
 
 
                     if sentiment_val == -1:
-                        response = "You hate " + title + ", huh?"
+                        response = random.choice(negative_bank) + title + random.choice(addendum_bank)
 
                     elif sentiment_val == 0:
-                        response = "You're pretty in the middle about " + title + ", aren't you?"
+                        response = random.choice(neutral_bank) + title + random.choice(addendum_bank)
                     else:
-                        response = "You just adore " + title + ", don't you?"
+                        response = random.choice(positive_bank) + title + random.choice(addendum_bank)
 
 
                     self.user_counter += 1
@@ -191,9 +191,55 @@ class Chatbot:
                         # remove the last space and comma.
                         mult_response = mult_response[:len(mult_response)-2]
 
+                    # if at some point we get past 5 data points, make sure we recommend after this.
+                    if (self.user_counter + i) %5 == 0:
+                        self.recommend_or_not == True
+
 
                 response = "It seems to me that " + mult_response + ". What a mouthful."
+                
+                
+        if ((self.user_counter) %5 == 0 and self.user_counter != 0 ) or self.recommend_or_not == True:
 
+            
+            response = ""
+            
+            
+
+            if self.asking_more_recs:
+                self.asking_more_recs = False
+                if line == "yes":
+                    response = "Awesome, gonna serve you up some. "
+                    
+                else:
+                    response = "You got it chief. Tell me more about movies you watched, then. "
+                    self.recommend_or_not = False
+                    self.user_counter = 0
+                    return response
+
+#             print("Do i get here? 1")
+            print("Coming up with a recommendation! Sit tight, I'm thinking hard...")
+            ##################### PLUG IN RECOMMENDATION STUFF HERE
+
+            recommendations = self.recommend( self.user_ratings, self.ratings  )
+            
+            recommendation_str = self.titles[recommendations[self.recommend_i]][0]
+            
+            self.recommend_i += 1
+            
+
+            
+            
+            response += "Given what you told me, I think you would like " + recommendation_str + ". Would you like more recommendations? Answer with 'yes' or 'no'."
+            
+            self.asking_more_recs = True
+            
+            
+            
+            
+            return response       
+                
+        
         ########################################################################
         #                          END OF YOUR CODE                            #
         ########################################################################
@@ -763,12 +809,19 @@ class Chatbot:
         ratings_predictions = {}
 
         # Find a movie the user has not rated yet.
+        
+        nonzeros = []
+        
+        for k in range(len(user_ratings)):
+            if user_ratings[k] != 0:
+                nonzeros.append(k)
+        
         for i in range(len(user_ratings)):
             predicted_rating = 0
             rating = user_ratings[i]
             if rating == 0:
                 # Compare movie i to each movie the user has already rated.
-                for j in range(len(user_ratings)):
+                for j in nonzeros:
                     if user_ratings[j] != 0 and i != j:
                         predicted_rating += self.similarity(ratings_matrix[i], ratings_matrix[j]) * user_ratings[j]
 
@@ -806,12 +859,11 @@ class Chatbot:
         chatbot can do and how the user can interact with it.
         """
         return """
-        Your task is to implement the chatbot as detailed in the PA6
-        instructions.
-        Remember: in the starter mode, movie names will come in quotation marks
-        and expressions of sentiment will be simple!
-        TODO: Write here the description for your own chatbot!
+        This is an NLP chatbot that uses advanced techniques to provide the highest quality movie recommendations.
+        This is developed by young strapping Stanford researchers at the cutting edge of Natural Language Processing science.
+        Our recommendations dwarf those of Netflix.
         """
+        
 
 
 if __name__ == '__main__':
